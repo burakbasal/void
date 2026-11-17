@@ -99,4 +99,3 @@ await deny(() => db.query('select * from public.messages'));
 await db.exec('reset role');
 await db.close();
 console.log(`PASS: ${checks} SQL/RLS assertions using real PostgreSQL in PGlite; auth and Realtime transport schemas stubbed, no hosted-service verification.`);
-
