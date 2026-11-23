@@ -20,8 +20,8 @@ The Cloudflare-shaped static preview from `out` was checked in Chromium:
 - Lighthouse accessibility 1.00, best practices 1.00, SEO 1.00.
 - No console errors and no CSP violations.
 - Generated `_headers` uses hash-based CSP with no `unsafe-inline`; security headers and HSTS are present. With a backend URL at build time, `connect-src` is limited to that exact HTTPS/WSS origin.
-- `/robots.txt` and `/sitemap.xml` resolve and point to `https://void.pages.dev`.
-- Canonical metadata and generated Open Graph/Twitter images resolve to the `void.pages.dev` origin.
+- `/robots.txt` and `/sitemap.xml` resolve and point to `https://void-deh.pages.dev`.
+- Canonical metadata and generated Open Graph/Twitter images resolve to the `void-deh.pages.dev` origin.
 - Command completion resolves `/members`, `/topic`, `/kick`, `/invite`, and `/rooms`.
 - Guest `/help` now lists account, room, and messaging commands with a note that rooms require login.
 
@@ -29,9 +29,8 @@ A Supabase public URL and publishable key were supplied later and installed only
 
 ## External status
 
-- GitHub: `https://github.com/burakbasal/void` was not reachable through the public web/API, and no GitHub CLI token was available. The repository was initialized locally on `main` with clean source, but no remote was created and public visibility was not changed.
-- Cloudflare: no API token or account ID was available. A direct `wrangler pages deploy out --project-name=void --branch=main` attempt failed with the explicit non-interactive token requirement, and `https://void.pages.dev` still returns 404. `.github/workflows/deploy.yml` and `wrangler.toml` are prepared for the free `void` Pages project; the workflow skips safely until required secrets exist.
+- GitHub: pending authenticated CLI approval. The repository is initialized locally on `main`; no remote or public visibility change has been completed yet.
+- Cloudflare: authenticated via the Wrangler device flow, the `void` Pages project was created, and the static export was deployed with `wrangler pages deploy out --project-name=void --branch=main`. The production URL is `https://void-deh.pages.dev`; the deployment reached `https://ccc95d28.void-deh.pages.dev` and the live production origin returned the VOID terminal HTML. The requested `https://void.pages.dev` name is globally held by another Cloudflare account, so Cloudflare assigned the `void-deh` suffix. `.github/workflows/deploy.yml` remains prepared for automated redeploys once repository secrets are present.
 - Supabase: project `rxanzkiooragcgqilbxx` is reachable. Application tables are present, but the required public RPC functions (`room_directory`, `create_room`, `update_room_topic`, `remove_from_room`, `open_dm`) are not reachable with the publishable key. Applying/reloading the migration requires a real database password or a Supabase access token; the supplied password was a placeholder, the database host resolves only to an unreachable IPv6 address from this environment, and no dashboard session was available.
-- The global Pages subdomain name `void` can only be confirmed by an authenticated Cloudflare account. If it is already taken, an owned domain or another project name is required.
 
-No claim in this document should be read as the site being publicly deployed or the GitHub repository being public.
+The site is publicly reachable at the assigned `void-deh.pages.dev` address, but the exact `void.pages.dev` address was not obtainable with this Cloudflare account. The GitHub repository is not yet public.

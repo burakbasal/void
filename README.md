@@ -132,9 +132,9 @@ The static export includes canonical URL metadata, index/follow robots rules, `/
 
 ## Production deployment
 
-The target address is `https://void.pages.dev`, the free Cloudflare Pages subdomain for a Pages project named `void`. The name is global: if another Cloudflare account already owns it, choose another project name or connect a domain you own. Building or running locally never publishes anything by itself.
+The deployed address is `https://void-deh.pages.dev`, the free Cloudflare Pages subdomain assigned to the `void` project in this account. The requested `https://void.pages.dev` name is global and is already held by another Cloudflare account, so Cloudflare appended the `void-deh` suffix; publishing there would require owning that name or connecting a domain you control. Building or running locally never publishes anything by itself.
 
-1. Create a production Supabase project separate from development and integration tests. Apply the migration, keep Realtime **Allow public access** disabled, configure custom SMTP, and set the site URL plus redirect URLs to `https://void.pages.dev/**`.
+1. Create a production Supabase project separate from development and integration tests. Apply the migration, keep Realtime **Allow public access** disabled, configure custom SMTP, and set the site URL plus redirect URLs to `https://void-deh.pages.dev/**`.
 2. In Cloudflare, create a Pages project named `void`, or provide an API token with Pages edit permission and your account ID. Never commit either credential.
 3. Add these GitHub repository secrets so the build embeds the intended backend and the workflow can publish:
 
@@ -145,7 +145,7 @@ The target address is `https://void.pages.dev`, the free Cloudflare Pages subdom
    | `NEXT_PUBLIC_SUPABASE_URL` | Production Supabase project URL. |
    | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Production public/publishable (legacy anon) key. |
 
-   No service-role or database password is used by the web build. `NEXT_PUBLIC_SITE_URL` is fixed to `https://void.pages.dev` in the deployment workflow.
+   No service-role or database password is used by the web build. `NEXT_PUBLIC_SITE_URL` is fixed to `https://void-deh.pages.dev` in the deployment workflow.
 4. Push to `main` or run the **Deploy VOID to Cloudflare Pages** workflow manually. `.github/workflows/deploy.yml` verifies the app, builds the static export, generates a hash-based CSP in `out/_headers`, and deploys `out` to the `void` Pages project. The workflow reports a skipped deployment instead of failing when secrets are absent.
 5. Local preview of the same output:
 
