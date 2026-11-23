@@ -132,9 +132,15 @@ The static export includes canonical URL metadata, index/follow robots rules, `/
 
 ## Production deployment
 
-The deployed address is `https://void-deh.pages.dev`, the free Cloudflare Pages subdomain assigned to the `void` project in this account. The requested `https://void.pages.dev` name is global and is already held by another Cloudflare account, so Cloudflare appended the `void-deh` suffix; publishing there would require owning that name or connecting a domain you control. Building or running locally never publishes anything by itself.
+The deployed address is `https://void-deh.pages.dev`, the free Cloudflare Pages subdomain assigned to the `void` project in this account. The requested `https://void.pages.dev` name is global and is already held by another Cloudflare account, so Cloudflare appended the `void-deh` suffix; publishing there would require owning that name or connecting a domain you control. The custom hostname `https://void.roamcroft.com` has been attached to the Pages project and needs this proxied DNS record in the `roamcroft.com` zone to become active:
 
-1. Create a production Supabase project separate from development and integration tests. Apply the migration, keep Realtime **Allow public access** disabled, configure custom SMTP, and set the site URL plus redirect URLs to `https://void-deh.pages.dev/**`.
+| Type | Name | Target | Proxy |
+| --- | --- | --- | --- |
+| CNAME | `void` | `void-deh.pages.dev` | Proxied (orange cloud) |
+
+Building or running locally never publishes anything by itself.
+
+1. Create a production Supabase project separate from development and integration tests. Apply the migration, keep Realtime **Allow public access** disabled, configure custom SMTP, and set the site URL plus redirect URLs to the production origin (`https://void-deh.pages.dev/**`, or `https://void.roamcroft.com/**` after the DNS record is active).
 2. In Cloudflare, create a Pages project named `void`, or provide an API token with Pages edit permission and your account ID. Never commit either credential.
 3. Add these GitHub repository secrets so the build embeds the intended backend and the workflow can publish:
 
