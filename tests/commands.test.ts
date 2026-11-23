@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { COMMANDS, parseCommand, tokenize } from "../src/lib/commands";
+import { COMMANDS, HELP_ENTRIES, formatHelp, parseCommand, tokenize } from "../src/lib/commands";
 
 describe("terminal tokenization", () => {
   it("separates whitespace while preserving quoted values", () => {
@@ -73,5 +73,21 @@ describe("terminal command parsing", () => {
     for (const command of ["/create", "/join", "/members", "/topic", "/invite", "/kick", "/delete", "/dm", "/history"]) {
       assert.ok(COMMANDS.includes(command), `${command} is registered`);
     }
+  });
+});
+
+describe("terminal help", () => {
+  it("documents every registered command, including account commands", () => {
+    const documented = new Set(HELP_ENTRIES.map(([command]) => command.split(" ")[0]));
+    for (const command of COMMANDS) {
+      assert.ok(documented.has(command), `${command} is documented`);
+    }
+  });
+
+  it("formats command syntax and descriptions for the terminal", () => {
+    const lines = formatHelp();
+    assert.equal(lines.length, HELP_ENTRIES.length);
+    assert.ok(lines.some(line => line.startsWith("/kick <username>\n  ")));
+    assert.ok(lines.some(line => line.startsWith('/topic [text]\n  ')));
   });
 });

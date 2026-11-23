@@ -4,11 +4,11 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 're
 import type { RealtimeChannel, Session } from '@supabase/supabase-js';
 import { api } from '@/lib/api';
 import { getSupabase, isConfigured } from '@/lib/supabase';
-import { COMMANDS, parseCommand } from '@/lib/commands';
-import { matchesConversation } from '@/lib/conversation';
+import { COMMANDS, formatHelp, parseCommand } from '@/lib/commands';
+import { matchesConversation, roomUpdateForConversation } from '@/lib/conversation';
 import { formatRoomListing, formatRoomMember } from '@/lib/format';
 import { emailSchema, usernameSchema, passwordSchema, readableError, TerminalError } from '@/lib/validation';
-import type { Conversation, Message, Profile } from '@/lib/types';
+import { conversationTopic, type Conversation, type Message, type Profile, type Room } from '@/lib/types';
 
 type Entry = { id: string; kind: 'system' | 'command' | 'error' | 'success' | 'message' | 'heading'; text: string; message?: Message };
 type Flow = { mode: 'login' | 'register' | 'reset' | 'password'; step: 'email' | 'username' | 'password' | 'confirm'; email?: string; username?: string; password?: string };
@@ -18,27 +18,6 @@ const logo = `██╗   ██╗ ██████╗ ██╗████�
 ╚██╗ ██╔╝██║   ██║██║██║  ██║
  ╚████╔╝ ╚██████╔╝██║██████╔╝
   ╚═══╝   ╚═════╝ ╚═╝╚═════╝`;
-const help = [
-  ['/rooms', 'discover rooms with topics and member counts'],
-  ['/create <name> [public|private] ["topic"]', 'create a room with an optional topic and enter it'],
-  ['/join <name>', 'enter a public room or an invited private room'],
-  ['/members', 'list everyone in the current room'],
-  ['/topic [text]', 'show or change the room topic · use "" to clear · owner only'],
-  ['/users [prefix]', 'find people · see who is online'],
-  ['/dm <username> [message]', 'open a private conversation'],
-  ['/inbox', 'list your recent direct conversations'],
-  ['/profile [username]', 'read your profile or someone else’s'],
-  ['/profile bio <text>', 'update your bio · use "" to clear it'],
-  ['/profile username <name>', 'change your username'],
-  ['/invite <username>', 'invite someone to your current room · owner only'],
-  ['/kick <username>', 'remove someone from your room · owner only'],
-  ['/leave', 'leave the current room or DM'],
-  ['/delete <room-name>', 'permanently delete your current room · owner only'],
-  ['/history', 'load 50 earlier messages'],
-  ['/clear', 'clear this terminal · messages remain saved'],
-  ['/logout', 'close your session'],
-  ['/help', 'you are here'],
-];
 const sameConversation = (a: Conversation | null, b: Conversation | null) => a?.kind === b?.kind && (a?.kind === 'room' && b?.kind === 'room' ? a.room.id === b.room.id : a?.kind === 'dm' && b?.kind === 'dm' ? a.peer.id === b.peer.id : a === b);
 
 export default function Terminal() {
@@ -92,11 +71,11 @@ export default function Terminal() {
       return next;
     });
   }, []);
-  const setContext = useCallback((value: Conversation | null) => {
+  const setContext = useCallback((value: Conversation | null, options?: { preserveHistory?: boolean }) => {
     contextRef.current = value;
     setConversation(value);
     setTypers({});
-    oldest.current = null;
+    if (!options?.preserveHistory) oldest.current = null;
   }, []);
 
   useEffect(() => { profileRef.current = profile; }, [profile]);
@@ -197,6 +176,17 @@ export default function Terminal() {
           if (active()) write(`↳ New DM from @${sender}. Open it with /dm ${sender}.`, 'success');
         }
       })();
+    }).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms' }, payload => {
+      if (!active()) return;
+      const updated = payload.new as Room;
+      if (!updated || typeof updated.id !== 'string') return;
+      const current = contextRef.current;
+      const room = roomUpdateForConversation(current, updated);
+      if (!room) return;
+      setContext({ kind: 'room', room }, { preserveHistory: true });
+      if (current?.kind === 'room' && current.room.topic !== room.topic) {
+        write(room.topic ? `Topic in #${room.name} changed to: ${room.topic}` : `Topic in #${room.name} was cleared.`);
+      }
     });
     void client.realtime.setAuth().then(() => {
       if (!active()) return;
@@ -218,7 +208,7 @@ export default function Terminal() {
   useEffect(() => {
     if (!conversation || !session?.user.id || !profile) return;
     const client = getSupabase(), userId = session.user.id;
-    const topic = conversation.kind === 'room' ? `room:${conversation.room.id}` : `dm:${[userId, conversation.peer.id].sort().join(':')}`;
+    const topic = conversationTopic(conversation, userId);
     let alive = true;
     const channel = client.channel(topic, { config: { private: true, presence: { key: userId } } });
     channelRef.current = channel;
@@ -320,9 +310,8 @@ export default function Terminal() {
     if (command?.name === '/clear') { setEntries([]); setIntro(false); return; }
     if (command?.name === '/help') {
       write('COMMAND REFERENCE', 'heading');
-      if (!sessionRef.current) {
-        write('login                     open your session\nregister                  create an account\n/reset                    recover your password\n/resend <email>           resend account confirmation\n/cancel                   cancel the current prompt\n/clear                    clear the terminal');
-      } else help.forEach(([cmd, detail]) => write(`${cmd}\n  ${detail}`));
+      write(sessionRef.current ? 'All commands are available in this session.' : 'Rooms and messages require login or register.');
+      formatHelp().forEach(line => write(line));
       return;
     }
     requireBackend();
@@ -377,7 +366,7 @@ export default function Terminal() {
         if (!args.length) { write(c.room.topic ? `Topic: ${c.room.topic}` : 'This room has no topic. The owner can set one with /topic <text>.'); break; }
         const updated = await api.updateRoomTopic(c.room.id, args.join(' '));
         checkpoint();
-        setContext({ kind: 'room', room: updated });
+        setContext({ kind: 'room', room: updated }, { preserveHistory: true });
         write(updated.topic ? `Topic set: ${updated.topic}` : 'Topic cleared.', 'success'); break;
       }
       case '/users': {

@@ -119,13 +119,15 @@ npm run test:sql
 npm run build
 ```
 
-`npm test` uses Node's test runner and `tsx` to run command parsing and input validation tests. `npm run test:sql` applies the real migration to an isolated PGlite PostgreSQL instance and checks database permissions, RLS, membership, profile changes, and persistence. That harness supplies minimal Auth and Realtime schema stubs; it does not test Supabase Auth or WebSocket transport.
+`npm test` uses Node's test runner and `tsx` to run command parsing, command-help coverage, group formatting, conversation routing, input validation, error redaction, and static-export header tests. `npm run test:sql` applies the real migration to an isolated PGlite PostgreSQL instance and checks database permissions, RLS, membership, profile changes, and persistence. That harness supplies minimal Auth and Realtime schema stubs; it does not test Supabase Auth or WebSocket transport.
 
 Run `npm run test:db` for actual Supabase integration checks after configuring `.env.local` with the public project values and `SUPABASE_SERVICE_ROLE_KEY` for a dedicated test project or local backend. The script creates disposable test accounts and removes them when finished. Never point this test at production. Static checks and a successful build do not establish that the external Supabase project is configured correctly. Verify account registration, confirmation, login, private-room access, persisted room messages, two-user DMs, presence, typing, refresh, and logout against the intended backend.
 
 Integration checks can also run without an administrative key using three existing, dedicated test accounts. Set `VOID_TEST_FIXTURES_PATH` to an absolute path to a private JSON file outside the repository. The file must contain an `accounts` array of at least three distinct objects, each with `id`, `email`, `password`, and `username`. Then run `npm run test:db` with the public Supabase URL/key configured. This mode never reads the administrative key or deletes Auth accounts. It creates uniquely named rooms, deletes those rooms afterward, restores tested profile and password changes, and preserves the external accounts for their owner to remove. Append-only test DMs remain in those disposable accounts. Do not use personal accounts or commit the fixture file. Avoid using the same accounts concurrently during the run.
 
 CI runs the type check, unit tests, isolated PostgreSQL checks, and production build without production credentials. It does not mutate a Supabase project.
+
+The static export includes canonical URL metadata, index/follow robots rules, `/robots.txt`, `/sitemap.xml`, an SVG icon, and generated Open Graph and Twitter cards. `out/_headers` receives a SHA-256-hash-based CSP with no `unsafe-inline`; when a Supabase URL is present at build time, `connect-src` is narrowed to that exact HTTPS/WSS origin instead of wildcarding all Supabase hosts and local ports.
 
 ## Production deployment
 
@@ -153,7 +155,7 @@ The target address is `https://void.pages.dev`, the free Cloudflare Pages subdom
    ```
 
    `wrangler.toml` pins the compatibility date and output directory. Local `workerd` requires a current Visual C++ redistributable on Windows; a failed local runtime does not indicate a deployment failure in Cloudflare.
-6. After a deployment, confirm HTTPS headers, canonical SEO metadata, `/robots.txt`, `/sitemap.xml`, registration, two-user group messaging, invitations, owner topic changes, kicking, DMs, presence, and persistence after refresh.
+6. After a deployment, confirm HTTPS headers, canonical SEO metadata, social preview cards, `/robots.txt`, `/sitemap.xml`, registration, two-user group messaging, invitations, owner topic changes, kicking, DMs, presence, and persistence after refresh.
 
 The static export has no server-side API routes. Supabase RLS remains the only authorization boundary; do not add a service-role key to this deployment. A standard Node deployment remains possible by removing `output: 'export'`, but the supplied Cloudflare workflow uses the static path.
 

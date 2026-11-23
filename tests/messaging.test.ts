@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { matchesConversation } from "../src/lib/conversation";
+import { matchesConversation, roomUpdateForConversation } from "../src/lib/conversation";
 import { conversationTopic } from "../src/lib/types";
 import type { Conversation, Message, Profile } from "../src/lib/types";
 
@@ -42,5 +42,13 @@ describe("conversation message routing", () => {
   it("uses a stable, participant-ordered DM topic", () => {
     assert.equal(conversationTopic(dmConversation, me), `dm:${[me, peer].sort().join(":")}`);
     assert.equal(conversationTopic(roomConversation, me), `room:${roomId}`);
+  });
+
+  it("applies a room update only to the matching open room", () => {
+    const updated = { ...roomConversation.room, topic: "quiet hours" };
+    assert.deepEqual(roomUpdateForConversation(roomConversation, updated), updated);
+    assert.equal(roomUpdateForConversation(dmConversation, updated), null);
+    assert.equal(roomUpdateForConversation(null, updated), null);
+    assert.equal(roomUpdateForConversation(roomConversation, { ...updated, id: otherRoomId }), null);
   });
 });
