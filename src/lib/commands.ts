@@ -10,7 +10,7 @@ export const HELP_ENTRIES = [
   ['/password', 'set a new password after opening a recovery link'],
   ['/resend <email>', 'resend account confirmation'],
   ['/rooms', 'discover rooms with topics and member counts'],
-  ['/create <name> [public|private] ["topic"]', 'create a room with an optional topic and enter it'],
+  ['/create <name> [public|private] ["topic"]', 'create a room and enter it · public by default; topic may follow the name directly'],
   ['/join <name>', 'enter a public room or an invited private room'],
   ['/members', 'list everyone in the current room'],
   ['/topic [text]', 'show or change the room topic · use "" to clear · owner only'],
@@ -33,6 +33,23 @@ export const HELP_ENTRIES = [
 
 export function formatHelp(): string[] {
   return HELP_ENTRIES.map(([command, detail]) => `${command}\n  ${detail}`);
+}
+
+export type CreateRoomArgs = { name: string; visibility: "public" | "private"; topic: string };
+
+/** Accepts `/create name`, `/create name public "topic"`, and `/create name "topic"`. */
+export function parseCreateArgs(args: string[]): CreateRoomArgs {
+  const [rawName, second, third, ...extra] = args;
+  const usage = 'Usage: /create <name> [public|private] ["topic"]';
+  if (!rawName || extra.length) throw new TerminalError(usage);
+  const name = rawName.replace(/^#/, "");
+  if (second === undefined) return { name, visibility: "public", topic: "" };
+  if (second === "public" || second === "private") {
+    if (third === undefined) return { name, visibility: second, topic: "" };
+    return { name, visibility: second, topic: third };
+  }
+  if (third !== undefined) throw new TerminalError(usage);
+  return { name, visibility: "public", topic: second };
 }
 
 export function tokenize(input: string): string[] {

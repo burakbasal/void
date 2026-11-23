@@ -5,13 +5,13 @@ Current checkout verified on 23 November 2026. The canonical source was `C:\User
 ## Automated checks
 
 - `npm run check` — TypeScript passed.
-- `npm test` — 33 unit tests passed (tokenization, command parsing and help coverage, group formatting, message routing, validation, error redaction, static-export header hardening).
+- `npm test` — 37 unit tests passed (tokenization, command parsing and help coverage, group creation forms, formatting, message routing, validation, error redaction, static-export header hardening).
 - `npm run test:sql` — 56 SQL/RLS assertions passed against the committed migration in PGlite. Auth and Realtime schemas are stubs in this harness; hosted transport is not verified here.
 - `npm run build` — production static export passed.
 - `npm audit` — zero known vulnerabilities.
 - Secret hygiene — no hardcoded API keys, service-role keys, passwords, or `.env.local` in tracked source.
 
-Group coverage includes private/public room creation with topics, directory visibility and counts, member listing formatting, owner topic changes, realtime topic updates scoped to the open room, history preservation across metadata updates, invitations, owner-only removal, membership revocation, two-way group history, topic authorization, and nonmember denial. The optional hosted runner in `tests/database.integration.mjs` additionally checks real Supabase Auth, Realtime delivery, presence, typing, and concurrency when credentials are supplied.
+Group coverage includes private/public room creation with explicit or shorthand topics, directory visibility and counts, member listing formatting, owner topic changes, realtime topic updates scoped to the open room, history preservation across metadata updates, invitations, owner-only removal, membership revocation, two-way group history, topic authorization, and nonmember denial. The optional hosted runner in `tests/database.integration.mjs` additionally checks real Supabase Auth, Realtime delivery, presence, typing, and concurrency when credentials are supplied.
 
 ## Browser checks
 

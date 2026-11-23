@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { COMMANDS, HELP_ENTRIES, formatHelp, parseCommand, tokenize } from "../src/lib/commands";
+import { COMMANDS, HELP_ENTRIES, formatHelp, parseCommand, parseCreateArgs, tokenize } from "../src/lib/commands";
 
 describe("terminal tokenization", () => {
   it("separates whitespace while preserving quoted values", () => {
@@ -89,5 +89,34 @@ describe("terminal help", () => {
     assert.equal(lines.length, HELP_ENTRIES.length);
     assert.ok(lines.some(line => line.startsWith("/kick <username>\n  ")));
     assert.ok(lines.some(line => line.startsWith('/topic [text]\n  ')));
+  });
+});
+
+describe("group creation arguments", () => {
+  it("defaults to a public room without a topic", () => {
+    assert.deepEqual(parseCreateArgs(["#quiet-room"]), {
+      name: "quiet-room", visibility: "public", topic: "",
+    });
+  });
+
+  it("accepts a topic directly after the room name", () => {
+    assert.deepEqual(parseCreateArgs(["quiet-room", "a quiet place"]), {
+      name: "quiet-room", visibility: "public", topic: "a quiet place",
+    });
+  });
+
+  it("accepts explicit visibility with and without a topic", () => {
+    assert.deepEqual(parseCreateArgs(["secret-room", "private"]), {
+      name: "secret-room", visibility: "private", topic: "",
+    });
+    assert.deepEqual(parseCreateArgs(["secret-room", "public", "open topic"]), {
+      name: "secret-room", visibility: "public", topic: "open topic",
+    });
+  });
+
+  it("rejects malformed argument combinations", () => {
+    assert.throws(() => parseCreateArgs([]), /Usage/);
+    assert.throws(() => parseCreateArgs(["room", "public", "topic", "extra"]), /Usage/);
+    assert.throws(() => parseCreateArgs(["room", "unknown", "topic"]), /Usage/);
   });
 });

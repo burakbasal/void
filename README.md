@@ -66,6 +66,7 @@ Enter `login` or `register` at the welcome prompt. Authentication is interactive
 | `/help` | Show the available commands and syntax. |
 | `/rooms` | Discover rooms with topics, owners, and member counts. |
 | `/create quiet-room public "a topic"` | Create and enter a public room with an optional topic. |
+| `/create quiet-room "a topic"` | Short form: public is the default when visibility is omitted. |
 | `/create quiet-room private` | Create and enter an invitation-only room. |
 | `/join quiet-room` | Join a public room or open a private room you already belong to. |
 | `/members` | List everyone in the current room, with owner and online markers. |

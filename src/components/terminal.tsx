@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 're
 import type { RealtimeChannel, Session } from '@supabase/supabase-js';
 import { api } from '@/lib/api';
 import { getSupabase, isConfigured } from '@/lib/supabase';
-import { COMMANDS, formatHelp, parseCommand } from '@/lib/commands';
+import { COMMANDS, formatHelp, parseCommand, parseCreateArgs } from '@/lib/commands';
 import { matchesConversation, roomUpdateForConversation } from '@/lib/conversation';
 import { formatRoomListing, formatRoomMember } from '@/lib/format';
 import { emailSchema, usernameSchema, passwordSchema, readableError, TerminalError } from '@/lib/validation';
@@ -342,10 +342,8 @@ export default function Terminal() {
         write('● joined   · available     /join <name> to enter'); break;
       }
       case '/create': {
-        if (!args[0] || args.length > 3 || (args[1] && !['public','private'].includes(args[1]))) {
-          throw new TerminalError('Usage: /create <name> [public|private] ["topic"]');
-        }
-        const room = await api.createRoom(args[0].replace(/^#/, ''), (args[1] ?? 'public') as 'public' | 'private', args[2] ?? '');
+        const input = parseCreateArgs(args);
+        const room = await api.createRoom(input.name, input.visibility, input.topic);
         checkpoint(); await open({ kind: 'room', room }); break;
       }
       case '/join': {
