@@ -5,6 +5,7 @@ import type { RealtimeChannel, Session } from '@supabase/supabase-js';
 import { api } from '@/lib/api';
 import { getSupabase, isConfigured } from '@/lib/supabase';
 import { COMMANDS, parseCommand } from '@/lib/commands';
+import { matchesConversation } from '@/lib/conversation';
 import { formatRoomListing, formatRoomMember } from '@/lib/format';
 import { emailSchema, usernameSchema, passwordSchema, readableError, TerminalError } from '@/lib/validation';
 import type { Conversation, Message, Profile } from '@/lib/types';
@@ -39,7 +40,6 @@ const help = [
   ['/help', 'you are here'],
 ];
 const sameConversation = (a: Conversation | null, b: Conversation | null) => a?.kind === b?.kind && (a?.kind === 'room' && b?.kind === 'room' ? a.room.id === b.room.id : a?.kind === 'dm' && b?.kind === 'dm' ? a.peer.id === b.peer.id : a === b);
-const matches = (m: Message, c: Conversation | null, userId: string) => c?.kind === 'room' ? m.room_id === c.room.id : c?.kind === 'dm' && !m.room_id && ((m.sender_id === userId && m.recipient_id === c.peer.id) || (m.sender_id === c.peer.id && m.recipient_id === userId));
 
 export default function Terminal() {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -188,9 +188,9 @@ export default function Terminal() {
       void (async () => {
         const m = payload.new as Message;
         if (!active() || seen.current.has(m.id)) return;
-        if (matches(m, contextRef.current, userId)) {
+        if (matchesConversation(m, contextRef.current, userId)) {
           try { m.sender = (await api.getProfile(m.sender_id)) ?? undefined; } catch { /* UUID remains a truthful fallback. */ }
-          if (active() && matches(m, contextRef.current, userId)) addMessages([m]);
+          if (active() && matchesConversation(m, contextRef.current, userId)) addMessages([m]);
         } else if (m.recipient_id === userId) {
           let sender = m.sender_id;
           try { sender = (await api.getProfile(m.sender_id))?.username ?? m.sender_id; } catch { /* Keep original identifier. */ }

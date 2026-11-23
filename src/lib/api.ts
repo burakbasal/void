@@ -53,12 +53,6 @@ export const api = {
     return data as Profile | null;
   },
 
-  async listRooms(): Promise<Room[]> {
-    const { data, error } = await getSupabase().from("rooms").select("id,name,visibility,topic,owner_id,created_at").order("name").limit(100);
-    if (error) throw error;
-    return data as Room[];
-  },
-
   listRoomDirectory(): Promise<RoomListing[]> {
     return arrayRpc<RoomListing>("room_directory", {});
   },

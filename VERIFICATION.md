@@ -5,7 +5,7 @@ Current checkout verified on 23 November 2026. The canonical source was `C:\User
 ## Automated checks
 
 - `npm run check` — TypeScript passed.
-- `npm test` — 22 unit tests passed (tokenization, command parsing, group formatting, validation, error redaction).
+- `npm test` — 26 unit tests passed (tokenization, command parsing, group formatting, message routing, validation, error redaction).
 - `npm run test:sql` — 56 SQL/RLS assertions passed against the committed migration in PGlite. Auth and Realtime schemas are stubs in this harness; hosted transport is not verified here.
 - `npm run build` — production static export passed.
 - `npm audit` — zero known vulnerabilities.
