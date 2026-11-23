@@ -5,7 +5,7 @@ import type { RealtimeChannel, Session } from '@supabase/supabase-js';
 import { api } from '@/lib/api';
 import { getSupabase, isConfigured } from '@/lib/supabase';
 import { COMMANDS, formatHelp, parseCommand, parseCreateArgs } from '@/lib/commands';
-import { matchesConversation, roomUpdateForConversation } from '@/lib/conversation';
+import { matchesConversation, roomDeletionForConversation, roomUpdateForConversation } from '@/lib/conversation';
 import { formatRoomListing, formatRoomMember } from '@/lib/format';
 import { emailSchema, usernameSchema, passwordSchema, readableError, TerminalError } from '@/lib/validation';
 import { conversationTopic, type Conversation, type Message, type Profile, type Room } from '@/lib/types';
@@ -187,6 +187,10 @@ export default function Terminal() {
       if (current?.kind === 'room' && current.room.topic !== room.topic) {
         write(room.topic ? `Topic in #${room.name} changed to: ${room.topic}` : `Topic in #${room.name} was cleared.`);
       }
+    }).on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'rooms' }, payload => {
+      if (!active() || !roomDeletionForConversation(contextRef.current, (payload.old as { id?: unknown })?.id)) return;
+      setContext(null); setEntries([]); seen.current.clear();
+      write('This room was deleted. You have returned to the lobby.', 'error');
     });
     void client.realtime.setAuth().then(() => {
       if (!active()) return;

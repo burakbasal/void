@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { matchesConversation, roomUpdateForConversation } from "../src/lib/conversation";
+import { matchesConversation, roomDeletionForConversation, roomUpdateForConversation } from "../src/lib/conversation";
 import { conversationTopic } from "../src/lib/types";
 import type { Conversation, Message, Profile } from "../src/lib/types";
 
@@ -50,5 +50,12 @@ describe("conversation message routing", () => {
     assert.equal(roomUpdateForConversation(dmConversation, updated), null);
     assert.equal(roomUpdateForConversation(null, updated), null);
     assert.equal(roomUpdateForConversation(roomConversation, { ...updated, id: otherRoomId }), null);
+  });
+
+  it("closes only the deleted room conversation", () => {
+    assert.equal(roomDeletionForConversation(roomConversation, roomId), true);
+    assert.equal(roomDeletionForConversation(dmConversation, roomId), false);
+    assert.equal(roomDeletionForConversation(roomConversation, otherRoomId), false);
+    assert.equal(roomDeletionForConversation(roomConversation, null), false);
   });
 });

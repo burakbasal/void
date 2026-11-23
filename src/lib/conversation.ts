@@ -15,3 +15,8 @@ export function roomUpdateForConversation(conversation: Conversation | null, roo
   if (conversation?.kind !== "room" || conversation.room.id !== room.id) return null;
   return room;
 }
+
+/** Whether a realtime room deletion closes the currently open conversation. */
+export function roomDeletionForConversation(conversation: Conversation | null, roomId: unknown): boolean {
+  return typeof roomId === "string" && conversation?.kind === "room" && conversation.room.id === roomId;
+}
