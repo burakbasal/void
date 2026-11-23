@@ -25,12 +25,13 @@ The Cloudflare-shaped static preview from `out` was checked in Chromium:
 - Command completion resolves `/members`, `/topic`, `/kick`, `/invite`, and `/rooms`.
 - Guest `/help` now lists account, room, and messaging commands with a note that rooms require login.
 
-A live two-account Supabase browser test was not repeated in this environment because no Supabase project URL/key was supplied. The app reports “backend not configured” rather than simulating data.
+A Supabase public URL and publishable key were supplied later and installed only in the ignored local `.env.local`. The static export was rebuilt against that project: the bundle embeds the intended backend, the app no longer reports “backend not configured”, and the generated CSP restricts `connect-src` to that exact HTTPS/WSS origin. A live two-account browser test still requires confirmation-enabled email accounts or an authenticated backend reset path.
 
 ## External status
 
 - GitHub: `https://github.com/burakbasal/void` was not reachable through the public web/API, and no GitHub CLI token was available. The repository was initialized locally on `main` with clean source, but no remote was created and public visibility was not changed.
-- Cloudflare: no API token or account ID was available. `.github/workflows/deploy.yml` and `wrangler.toml` are prepared for the free `void` Pages project targeting `https://void.pages.dev`; the workflow skips safely until required secrets exist.
+- Cloudflare: no API token or account ID was available. A direct `wrangler pages deploy out --project-name=void --branch=main` attempt failed with the explicit non-interactive token requirement, and `https://void.pages.dev` still returns 404. `.github/workflows/deploy.yml` and `wrangler.toml` are prepared for the free `void` Pages project; the workflow skips safely until required secrets exist.
+- Supabase: project `rxanzkiooragcgqilbxx` is reachable. Application tables are present, but the required public RPC functions (`room_directory`, `create_room`, `update_room_topic`, `remove_from_room`, `open_dm`) are not reachable with the publishable key. Applying/reloading the migration requires a real database password or a Supabase access token; the supplied password was a placeholder, the database host resolves only to an unreachable IPv6 address from this environment, and no dashboard session was available.
 - The global Pages subdomain name `void` can only be confirmed by an authenticated Cloudflare account. If it is already taken, an owned domain or another project name is required.
 
 No claim in this document should be read as the site being publicly deployed or the GitHub repository being public.
